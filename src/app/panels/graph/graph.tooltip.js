@@ -22,13 +22,30 @@ function ($) {
     };
 
     this.findHoverIndexFromData = function(posX, series) {
-      var len = series.data.length;
-      for (var j = 0; j < len; j++) {
-        if (series.data[j][0] > posX) {
-          return Math.max(j - 1,  0);
+      var min=0;
+      var max = series.data.length - 1;
+      var pindex = 0;
+      if (series.data[max][0] < posX)
+        return max;
+      while (min < max)
+      {
+        var middle = Math.floor(((max - min)/2) + min);
+        if (max - min <= 1) {
+          pindex=min;
+          break;
+        }
+        if (series.data[middle][0] > posX) {
+          max = middle;
+        }
+        else if (series.data[middle][0] < posX) {
+          min = middle;
+        }
+        else {
+          pindex = middle;
+          break;
         }
       }
-      return j - 1;
+      return pindex;
     };
 
     this.showTooltip = function(title, innerHtml, pos) {
@@ -41,7 +58,7 @@ function ($) {
       var value, i, series, hoverIndex, seriesTmp;
       var results = [];
 
-      var pointCount;
+      /*var pointCount;
       for (i = 0; i < seriesList.length; i++) {
         seriesTmp = seriesList[i];
         if (!seriesTmp.data.length) { continue; }
@@ -56,20 +73,21 @@ function ($) {
           results.pointCountMismatch = true;
           return results;
         }
-      }
+      }*/
 
-      hoverIndex = this.findHoverIndexFromData(pos.x, series);
-      var lasthoverIndex = 0;
-      if(!scope.panel.steppedLine) {
-        lasthoverIndex = hoverIndex;
-      }
-
-      //now we know the current X (j) position for X and Y values
-      results.time = series.data[hoverIndex][0];
+      
       var last_value = 0; //needed for stacked values
-
       for (i = 0; i < seriesList.length; i++) {
         series = seriesList[i];
+        hoverIndex = this.findHoverIndexFromData(pos.x, series);
+        console.log(series.data[hoverIndex][0], hoverIndex);
+        var lasthoverIndex = 0;
+        if(!scope.panel.steppedLine) {
+          lasthoverIndex = hoverIndex;
+        }
+
+        //now we know the current X (j) position for X and Y values
+        results.time = series.data[hoverIndex][0];
 
         if (!series.data.length || (scope.panel.legend.hideEmpty && series.allIsNull)) {
           results.push({ hidden: true });
