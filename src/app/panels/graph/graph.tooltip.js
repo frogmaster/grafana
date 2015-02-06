@@ -25,8 +25,9 @@ function ($) {
       var min=0;
       var max = series.data.length - 1;
       var pindex = 0;
-      if (series.data[max][0] < posX)
+      if (series.data[max][0] < posX){
         return max;
+      }
       while (min < max)
       {
         var middle = Math.floor(((max - min)/2) + min);
@@ -55,7 +56,7 @@ function ($) {
     };
 
     this.getMultiSeriesPlotHoverInfo = function(seriesList, pos) {
-      var value, i, series, hoverIndex, seriesTmp;
+      var value, i, series, hoverIndex;
       var results = [];
 
       /*var pointCount;
