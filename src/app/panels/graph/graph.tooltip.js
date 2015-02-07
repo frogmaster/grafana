@@ -21,12 +21,15 @@ function ($) {
       return j/ps - 1;
     };
 
-    this.findHoverIndexFromData = function(posX, series) {
+    this.findHoverIndexFromDataPoints2 = function(posX, series) {
       var min=0;
-      var max = series.data.length - 1;
+      var data = series.datapoints.points;
+      var ps = series.datapoints.pointsize;
+      var max = data.length / ps - 1;
+
       var pindex = 0;
-      if (series.data[max][0] < posX){
-        return max;
+      if (data[max * ps] < posX){
+        return max * ps;
       }
       while (min < max)
       {
@@ -35,10 +38,10 @@ function ($) {
           pindex=min;
           break;
         }
-        if (series.data[middle][0] > posX) {
+        if (data[middle * ps] > posX) {
           max = middle;
         }
-        else if (series.data[middle][0] < posX) {
+        else if (data[middle * ps] < posX) {
           min = middle;
         }
         else {
@@ -46,7 +49,8 @@ function ($) {
           break;
         }
       }
-      return pindex;
+      console.log("position", posX, data[pindex * ps], data[pindex * ps + 1 ], data[pindex * ps + 2]);
+      return {"index": pindex, "value": data[pindex * ps + 1 ], "timestamp": data[pindex * ps] };
     };
 
     this.showTooltip = function(title, innerHtml, pos) {
@@ -80,15 +84,15 @@ function ($) {
       var last_value = 0; //needed for stacked values
       for (i = 0; i < seriesList.length; i++) {
         series = seriesList[i];
-        hoverIndex = this.findHoverIndexFromData(pos.x, series);
-        console.log(series.data[hoverIndex][0], hoverIndex);
+        
+        var hoverdata = this.findHoverIndexFromDataPoints2(pos.x, series);
         var lasthoverIndex = 0;
         if(!scope.panel.steppedLine) {
-          lasthoverIndex = hoverIndex;
+          lasthoverIndex = hoverdata.index;
         }
 
         //now we know the current X (j) position for X and Y values
-        results.time = series.data[hoverIndex][0];
+        results.time = hoverdata.timestamp;
 
         if (!series.data.length || (scope.panel.legend.hideEmpty && series.allIsNull)) {
           results.push({ hidden: true });
@@ -97,13 +101,13 @@ function ($) {
 
         if (scope.panel.stack) {
           if (scope.panel.tooltip.value_type === 'individual') {
-            value = series.data[hoverIndex][1];
+            value = hoverdata.value;
           } else {
-            last_value += series.data[hoverIndex][1];
+            last_value += hoverdata.value;
             value = last_value;
           }
         } else {
-          value = series.data[hoverIndex][1];
+          value = hoverdata.value;
         }
 
         // Highlighting multiple Points depending on the plot type
@@ -111,20 +115,20 @@ function ($) {
           // stacked and steppedLine plots can have series with different length.
           // Stacked series can increase its length  on each new stacked serie if null points found,
           // to speed the index search we begin always on the las found hoverIndex.
-          var newhoverIndex = this.findHoverIndexFromDataPoints(pos.x, series,lasthoverIndex);
+          //var newhoverIndex = this.findHoverIndexFromDataPoints(pos.x, series,lasthoverIndex);
           // update lasthoverIndex depends also on the plot type.
-          if(!scope.panel.steppedLine) {
-            // on stacked graphs new will be always greater than last
-            lasthoverIndex = newhoverIndex;
-          } else {
-            // if steppeLine, not always series increases its length, so we should begin
-            // to search correct index from the original hoverIndex on each serie.
-            lasthoverIndex = hoverIndex;
-          }
+          //if(!scope.panel.steppedLine) {
+          //  // on stacked graphs new will be always greater than last
+          //  //lasthoverIndex = newhoverIndex;
+          //} else {
+          //  // if steppeLine, not always series increases its length, so we should begin
+          //  // to search correct index from the original hoverIndex on each serie.
+          //  lasthoverIndex = hoverIndex;
+          //}
 
-          results.push({ value: value, hoverIndex: newhoverIndex});
+          results.push({ value: value, hoverIndex: hoverdata.index});
         } else {
-          results.push({ value: value, hoverIndex: hoverIndex});
+          results.push({ value: value, hoverIndex: hoverdata.index});
         }
       }
 
