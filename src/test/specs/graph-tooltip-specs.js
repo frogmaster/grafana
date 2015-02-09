@@ -41,8 +41,12 @@ define([
   describeSharedTooltip("steppedLine false, stack false", function(ctx) {
     ctx.setup(function() {
       ctx.data = [
-        { data: [[10, 15], [12, 20]], },
-        { data: [[10, 2], [12, 3]], }
+        {
+          datapoints: { points: [10, 15, 12, 20], pointsize: 2 }
+        },
+        {
+          datapoints: { points: [10, 2, 12, 3], pointsize: 2 }
+        }
       ];
       ctx.pos = { x: 11 };
     });
@@ -60,39 +64,33 @@ define([
     });
   });
 
-  describeSharedTooltip("point count missmatch", function(ctx) {
-    ctx.setup(function() {
-      ctx.data = [
-        { data: [[10, 15], [12, 20]], },
-        { data: [[10, 2]] }
-      ];
-      ctx.pos = { x: 11 };
-    });
-
-    it('should set pointCountMismatch to true', function() {
-      expect(ctx.results.pointCountMismatch).to.be(true);
-    });
-  });
-
   describeSharedTooltip("one series is hidden", function(ctx) {
     ctx.setup(function() {
       ctx.data = [
-        { data: [[10, 15], [12, 20]], },
-        { data: [] }
+        {
+          datapoints: { points: [10, 15, 12, 20], pointsize: 2 }
+        },
+        {
+          datapoints: { points: [], pointsize: 2 }
+        }
       ];
       ctx.pos = { x: 11 };
     });
 
-    it('should set pointCountMismatch to false', function() {
-      expect(ctx.results.pointCountMismatch).to.be(undefined);
+    it('should return 1 series', function() {
+      expect(ctx.results.length).to.be(1);
     });
   });
 
   describeSharedTooltip("steppedLine false, stack true, individual false", function(ctx) {
     ctx.setup(function() {
       ctx.data = [
-        { data: [[10, 15], [12, 20]], },
-        { data: [[10, 2], [12, 3]], }
+        {
+          datapoints: { points: [10, 15, 12, 20], pointsize: 2 }
+        },
+        {
+          datapoints: { points: [10, 2, 12, 3], pointsize: 2 }
+        }
       ];
       ctx.scope.panel.stack = true;
       ctx.pos = { x: 11 };
@@ -107,8 +105,12 @@ define([
   describeSharedTooltip("steppedLine false, stack true, individual true", function(ctx) {
     ctx.setup(function() {
       ctx.data = [
-        { data: [[10, 15], [12, 20]], },
-        { data: [[10, 2], [12, 3]], }
+        {
+          datapoints: { points: [10, 15, 12, 20], pointsize: 2 }
+        },
+        {
+          datapoints: { points: [10, 2, 12, 3], pointsize: 2 }
+        }
       ];
       ctx.scope.panel.stack = true;
       ctx.scope.panel.tooltip.value_type = 'individual';
