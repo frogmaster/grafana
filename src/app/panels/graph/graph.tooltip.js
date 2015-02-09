@@ -87,9 +87,9 @@ function ($) {
 
         if (scope.panel.stack) {
           if (scope.panel.tooltip.value_type === 'individual') {
-            value = hoverdata.value;
+            value = hoverdata.value - last_value;
+            last_value = hoverdata.value;
           } else {
-            last_value += hoverdata.value;
             value = last_value;
           }
         } else {
