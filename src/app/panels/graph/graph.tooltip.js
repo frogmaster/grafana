@@ -9,27 +9,21 @@ function ($) {
 
     var $tooltip = $('<div id="tooltip">');
 
-    this.findHoverIndexFromDataPoints = function(posX, series,last) {
-      var ps = series.datapoints.pointsize;
-      var initial = last*ps;
-      var len = series.datapoints.points.length;
-      for (var j = initial; j < len; j += ps) {
-        if (series.datapoints.points[j] > posX) {
-          return Math.max(j - ps,  0)/ps;
-        }
-      }
-      return j/ps - 1;
-    };
-
-    this.findHoverIndexFromDataPoints2 = function(posX, series) {
+    this.findHoverIndexFromDataPoints = function(posX, series) {
       var min=0;
+
+      if (!series.datapoints || !series.datapoints.points || series.datapoints.points.length === 0) {
+        return false;
+      }
+
       var data = series.datapoints.points;
       var ps = series.datapoints.pointsize;
-      var max = data.length / ps - 1;
+      var max = data.length / ps;
 
       var pindex = 0;
       if (data[max * ps] < posX){
-        return max * ps;
+        pindex = max * ps;
+        min = max;
       }
       while (min < max)
       {
@@ -49,7 +43,6 @@ function ($) {
           break;
         }
       }
-      console.log("position", posX, data[pindex * ps], data[pindex * ps + 1 ], data[pindex * ps + 2]);
       return {"index": pindex, "value": data[pindex * ps + 1 ], "timestamp": data[pindex * ps] };
     };
 
@@ -60,41 +53,34 @@ function ($) {
     };
 
     this.getMultiSeriesPlotHoverInfo = function(seriesList, pos) {
-      var value, i, series, hoverIndex;
+      var value, i, series;
       var results = [];
 
-      /*var pointCount;
-      for (i = 0; i < seriesList.length; i++) {
-        seriesTmp = seriesList[i];
-        if (!seriesTmp.data.length) { continue; }
-
-        if (!pointCount) {
-          series = seriesTmp;
-          pointCount = series.data.length;
-          continue;
-        }
-
-        if (seriesTmp.data.length !== pointCount) {
-          results.pointCountMismatch = true;
-          return results;
-        }
-      }*/
-
-      
       var last_value = 0; //needed for stacked values
       for (i = 0; i < seriesList.length; i++) {
         series = seriesList[i];
-        
-        var hoverdata = this.findHoverIndexFromDataPoints2(pos.x, series);
+
+        var hoverdata = this.findHoverIndexFromDataPoints(pos.x, series);
+        if (!hoverdata) {
+          continue;
+        }
+
         var lasthoverIndex = 0;
         if(!scope.panel.steppedLine) {
           lasthoverIndex = hoverdata.index;
         }
 
-        //now we know the current X (j) position for X and Y values
-        results.time = hoverdata.timestamp;
+        if (hoverdata.timestamp > pos.x) {
+          results.push({ hidden: true });
+          continue;
+        }
+        //find the closest timestamp to X
+        if (!results.time || pos.x -  results.time >  pos.x - hoverdata.timestamp)
+        {
+          results.time = hoverdata.timestamp;
+        }
 
-        if (!series.data.length || (scope.panel.legend.hideEmpty && series.allIsNull)) {
+        if (!series.datapoints.points.length || (scope.panel.legend.hideEmpty && series.allIsNull)) {
           results.push({ hidden: true });
           continue;
         }
@@ -109,27 +95,7 @@ function ($) {
         } else {
           value = hoverdata.value;
         }
-
-        // Highlighting multiple Points depending on the plot type
-        if (scope.panel.steppedLine || (scope.panel.stack && scope.panel.nullPointMode == "null")) {
-          // stacked and steppedLine plots can have series with different length.
-          // Stacked series can increase its length  on each new stacked serie if null points found,
-          // to speed the index search we begin always on the las found hoverIndex.
-          //var newhoverIndex = this.findHoverIndexFromDataPoints(pos.x, series,lasthoverIndex);
-          // update lasthoverIndex depends also on the plot type.
-          //if(!scope.panel.steppedLine) {
-          //  // on stacked graphs new will be always greater than last
-          //  //lasthoverIndex = newhoverIndex;
-          //} else {
-          //  // if steppeLine, not always series increases its length, so we should begin
-          //  // to search correct index from the original hoverIndex on each serie.
-          //  lasthoverIndex = hoverIndex;
-          //}
-
-          results.push({ value: value, hoverIndex: hoverdata.index});
-        } else {
-          results.push({ value: value, hoverIndex: hoverdata.index});
-        }
+        results.push({ value: value, hoverIndex: hoverdata.index});
       }
 
       return results;
@@ -164,14 +130,7 @@ function ($) {
         plot.unhighlight();
 
         var seriesHoverInfo = self.getMultiSeriesPlotHoverInfo(plotData, pos);
-        if (seriesHoverInfo.pointCountMismatch) {
-          self.showTooltip('Shared tooltip error', '<ul>' +
-            '<li>Series point counts are not the same</li>' +
-            '<li>Set null point mode to null or null as zero</li>' +
-            '<li>For influxdb users set fill(0) in your query</li></ul>', pos);
-          return;
-        }
-
+        
         seriesHtml = '';
         timestamp = dashboard.formatDate(seriesHoverInfo.time);
 
