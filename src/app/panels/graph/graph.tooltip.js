@@ -90,7 +90,7 @@ function ($) {
             value = hoverdata.value - last_value;
             last_value = hoverdata.value;
           } else {
-            value = last_value;
+            value = hoverdata.value;
           }
         } else {
           value = hoverdata.value;
