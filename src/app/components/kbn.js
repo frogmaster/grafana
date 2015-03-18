@@ -127,12 +127,12 @@ function($, _, moment) {
       }
     }
 
-    intervalMs = kbn.round_interval((range.to.valueOf() - range.from.valueOf()) / resolution);
+    intervalMs = kbn.round_interval((range.to.valueOf() - range.from.valueOf()) / (resolution / 5));
     if (lowLimitMs > intervalMs) {
       intervalMs = lowLimitMs;
     }
 
-    return kbn.secondsToHms(intervalMs / 1000);
+    return kbn.secondsToHms(intervalMs / 1000 );
   };
 
   kbn.describe_interval = function (string) {
